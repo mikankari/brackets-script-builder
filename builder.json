@@ -1,18 +1,29 @@
 [
     {
+        "name": "Scala",
+        "run": "scala $FILE",
+        "compile": "scalac $FILE",
+        "runCompiled": "scala $BASE_FILE"
+    },
+    {
+        "name": "Java",
+        "compile": "javac $FILE",
+        "runCompiled": "java $BASE_FILE"
+    },
+    {
         "name": "Python",
-        "cmd": "python $FILE"
+        "run": "python $FILE"
     },
     {
         "name": "JavaScript",
-        "cmd": "node $FILE"
+        "run": "node $FILE"
     },
     {
         "name": "Ruby",
-        "cmd": "ruby $FILE"
+        "run": "ruby $FILE"
     },
     {
         "name": "Golang",
-        "cmd": "go build"
+        "run": "go build"
     }
 ]

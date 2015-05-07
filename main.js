@@ -1,14 +1,11 @@
-/**
-(c) by Victor Hornets
-Allow to run build programs (such as running Python/Ruby/Node/etc scripts) from Brackets and display results in panel. It is possible to create own build systems via 'Edit>Edit Builder' menu item and editing opened JSON-file (you need to restart Brackets).
-**/
-
 /*jslint plusplus: true, vars: true, nomen: true */
 /*global define, brackets, console, setTimeout */
 
 define(function (require, exports, module) {
     "use strict";
 
+    var menuId = "extensions.bsb.menu";
+    
     var AppInit             = brackets.getModule("utils/AppInit"),
         CommandManager      = brackets.getModule("command/CommandManager"),
         Menus               = brackets.getModule("command/Menus"),
@@ -21,19 +18,26 @@ define(function (require, exports, module) {
         Dialogs             = brackets.getModule("widgets/Dialogs"),
         nodeConnection      = new NodeConnection(),
         domainPath          = ExtensionUtils.getModulePath(module) + "domain";
-
+    
     var curOpenDir,
         curOpenFile,
         curOpenFileName,
-        curOpenLang,
-        cmd = '';
+        curOpenLang;
 
     var builders = JSON.parse(require('text!builder.json')),
         panel,
         panelHTML = require('text!brackets-builder-panel.html'),
         panelIsVisible = false;
 
-    function _processCmdOutput(data) {
+    function parseCommand(command) {
+        return command
+                    .replace(/\$PATH/g, curOpenDir)
+                    .replace(/\$FULL_FILE/g, curOpenFile)
+                    .replace(/\$BASE_FILE/g, baseName(curOpenFileName))
+                    .replace(/\$FILE/g, curOpenFileName);
+    }
+    
+    function processCmdOutput(data) {
         data = JSON.stringify(data);
         data = data
           .replace(/\"/g, '')
@@ -44,14 +48,14 @@ define(function (require, exports, module) {
         return data;
     }
     
-    function _baseName(str) {
+    function baseName(str) {
        var base = new String(str).substring(str.lastIndexOf('/') + 1); 
         if(base.lastIndexOf(".") != -1)       
             base = base.substring(0, base.lastIndexOf("."));
        return base;
     }
     
-    function _securePath(path) {
+    function securePath(path) {
         if (path.indexOf(' ') == -1) {
             return path;
         } else {
@@ -59,14 +63,14 @@ define(function (require, exports, module) {
         }
     }
     
-    function _prepare(action) {
+    function executeAction(action) {
         CommandManager.execute("file.saveAll")
         $('#builder-panel .builder-content').html('');
         
-        curOpenDir      = _securePath(DocumentManager.getCurrentDocument().file._parentPath);
-        curOpenFile     = _securePath(DocumentManager.getCurrentDocument().file._path);
-        curOpenFileName = _securePath(DocumentManager.getCurrentDocument().file._name);
-        curOpenLang     = _securePath(DocumentManager.getCurrentDocument().language._name);
+        curOpenDir      = securePath(DocumentManager.getCurrentDocument().file._parentPath);
+        curOpenFile     = securePath(DocumentManager.getCurrentDocument().file._path);
+        curOpenFileName = securePath(DocumentManager.getCurrentDocument().file._name);
+        curOpenLang     = securePath(DocumentManager.getCurrentDocument().language._name);
         
         nodeConnection.connect(true).fail(function (err) {
             console.error("[[Brackets Builder]] Cannot connect to node: ", err);
@@ -77,43 +81,61 @@ define(function (require, exports, module) {
                 console.error("[[Brackets Builder]] Cannot register domain: ", err);
             });
         }).then(function () {
+            var cmd = null;
+            var foundLanguage = false;
             builders.forEach(function (el) {
                 if (el.name.toLowerCase() === curOpenLang.toLowerCase()) {
+                    foundLanguage = true;
                     cmd = el[action];
                 }
             });
 
-            cmd = cmd
-                .replace(/\$PATH/g, curOpenDir)
-                .replace(/\$FULL_FILE/g, curOpenFile)
-                .replace(/\$BASE_FILE/g, _baseName(curOpenFileName))
-                .replace(/\$FILE/g, curOpenFileName);
-        }).then(function () {
-            $('#builder-panel .command').html(cmd);
-            nodeConnection.domains["builder.execute"].exec(curOpenDir, cmd)
-            .fail(function (err) {
-                $('#builder-panel .builder-content').html(_processCmdOutput(err));
-                panel.show();
-            })
-            .then(function (data) {
-                if(data != "") {
-                    $('#builder-panel .builder-content').html(_processCmdOutput(data));
-                    panel.show();
+            if (cmd == null || foundLanguage == false) {
+                if (foundLanguage) {
+                    Dialogs.showModalDialog(
+                        '', 
+                        'Brackets Builder Extention', 
+                        'It is very possible that this operation is not possible for current type of file.'
+                    );
+                } else {
+                    Dialogs.showModalDialog(
+                        '', 
+                        'Brackets Builder Extention', 
+                        'No run configuration for current file type. Go to Edit > Script Builder Configuration and add one.'
+                    );
                 }
-            });
+            } else {
+                cmd = parseCommand(cmd);
+                var start = new Date();
+                $('#builder-panel .command .text').html(cmd);
+                $('#builder-panel .command .status').html("Running...");
+                panel.show();
+                nodeConnection.domains["builder.execute"].exec(curOpenDir, cmd)
+                .fail(function (err) {
+                    $('#builder-panel .builder-content').html(processCmdOutput(err));
+                })
+                .then(function (data) {
+                    function buildRuntimeStatus(start) {
+                        var duration = (new Date().getTime() - start.getTime()) / 1000;
+                        return 'Finished in <b>' + duration + '</b>s';
+                    }
+                    $('#builder-panel .builder-content').html(processCmdOutput(data));
+                    $('#builder-panel .command .status').html(buildRuntimeStatus(start));
+                });
+            }
         }).done();
     }
 
     function compile() {
-        _prepare('compile');        
+        executeAction('compile');        
     }
 
     function run() {
-        _prepare('run');        
+        executeAction('run');        
     }
 
     function runCompiled() {
-        _prepare('runCompiled');        
+        executeAction('runCompiled');        
     }
 
     AppInit.appReady(function () {
@@ -122,20 +144,22 @@ define(function (require, exports, module) {
             panel.hide();
         });
 
-        CommandManager.register('Handling Running', 'builder.run', run);
-        CommandManager.register('Handling Compilation', 'builder.compile', compile);
-        CommandManager.register('Handling Running Compiled', 'builder.runCompiled', runCompiled);
-
-        KeyBindingManager.addBinding('builder.run', 'F9');
-        KeyBindingManager.addBinding('builder.compile', 'F10');
-        KeyBindingManager.addBinding('builder.runCompiled', 'F11');
+        CommandManager.register('Run', 'builder.run', run);
+        CommandManager.register('Compile', 'builder.compile', compile);
+        CommandManager.register('Run Compiled', 'builder.runCompiled', runCompiled);
+        
+        Menus.addMenu("Build", menuId, Menus.AFTER, Menus.AppMenuBar.NAVIGATE_MENU);
+        var menu = Menus.getMenu(menuId);
+        menu.addMenuItem("builder.run", "F9", Menus.BEFORE, "bsb.debug");
+        menu.addMenuItem("builder.compile", "F10", Menus.BEFORE, "bsb.debug");
+        menu.addMenuItem("builder.runCompiled", "F11", Menus.BEFORE, "bsb.debug");
 
         // Add menu item to edit .json file
         var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
 
         menu.addMenuDivider();
         // Create menu item that opens the config .json-file
-        CommandManager.register("Edit Builder", 'builder.open-conf', function () {
+        CommandManager.register("Script Builder Configuration", 'builder.open-conf', function () {
             Dialogs.showModalDialog('', 'Brackets Builder Extention', 'You must restart Brackets after changing this file.');
             var src = FileUtils.getNativeModuleDirectoryPath(module) + "/builder.json";
 

@@ -24,6 +24,7 @@ define(function (require, exports, module) {
 
     var curOpenDir,
         curOpenFile,
+        curOpenFileName,
         curOpenLang,
         cmd = '';
 
@@ -35,19 +36,38 @@ define(function (require, exports, module) {
     function _processCmdOutput(data) {
         data = JSON.stringify(data);
         data = data
-          .replace(/\\r/g, '\r')
-          .replace(/\\n/g, '\n')
           .replace(/\"/g, '')
-          .replace(/\\t/g, '\t');
+          .replace(/\\r/g, '\r')
+          .replace(/\\t/g, '\t')
+          .replace(/\\n/g, '\n')
+          .replace(/\\n/g, '\n');
         return data;
     }
-
-    function handle() {
+    
+    function _baseName(str) {
+       var base = new String(str).substring(str.lastIndexOf('/') + 1); 
+        if(base.lastIndexOf(".") != -1)       
+            base = base.substring(0, base.lastIndexOf("."));
+       return base;
+    }
+    
+    function _securePath(path) {
+        if (path.indexOf(' ') == -1) {
+            return path;
+        } else {
+            return '"' + path + '"';
+        }
+    }
+    
+    function _prepare(action) {
         CommandManager.execute("file.saveAll")
-        curOpenDir  = DocumentManager.getCurrentDocument().file._parentPath;
-        curOpenFile = DocumentManager.getCurrentDocument().file._path;
-        curOpenLang = DocumentManager.getCurrentDocument().language._name;
-
+        $('#builder-panel .builder-content').html('');
+        
+        curOpenDir      = _securePath(DocumentManager.getCurrentDocument().file._parentPath);
+        curOpenFile     = _securePath(DocumentManager.getCurrentDocument().file._path);
+        curOpenFileName = _securePath(DocumentManager.getCurrentDocument().file._name);
+        curOpenLang     = _securePath(DocumentManager.getCurrentDocument().language._name);
+        
         nodeConnection.connect(true).fail(function (err) {
             console.error("[[Brackets Builder]] Cannot connect to node: ", err);
         }).then(function () {
@@ -59,12 +79,17 @@ define(function (require, exports, module) {
         }).then(function () {
             builders.forEach(function (el) {
                 if (el.name.toLowerCase() === curOpenLang.toLowerCase()) {
-                    cmd = el.cmd;
+                    cmd = el[action];
                 }
             });
 
-            cmd = cmd.replace(/\$FILE/g, "\"" + curOpenFile + "\"");
+            cmd = cmd
+                .replace(/\$PATH/g, curOpenDir)
+                .replace(/\$FULL_FILE/g, curOpenFile)
+                .replace(/\$BASE_FILE/g, _baseName(curOpenFileName))
+                .replace(/\$FILE/g, curOpenFileName);
         }).then(function () {
+            $('#builder-panel .command').html(cmd);
             nodeConnection.domains["builder.execute"].exec(curOpenDir, cmd)
             .fail(function (err) {
                 $('#builder-panel .builder-content').html(_processCmdOutput(err));
@@ -79,15 +104,31 @@ define(function (require, exports, module) {
         }).done();
     }
 
+    function compile() {
+        _prepare('compile');        
+    }
+
+    function run() {
+        _prepare('run');        
+    }
+
+    function runCompiled() {
+        _prepare('runCompiled');        
+    }
+
     AppInit.appReady(function () {
         panel = PanelManager.createBottomPanel("brackets-builder-panel", $(panelHTML), 100);
         $('#builder-panel .close').on('click', function () {
             panel.hide();
         });
 
-        CommandManager.register('Handling Build', 'builder.build', handle);
+        CommandManager.register('Handling Running', 'builder.run', run);
+        CommandManager.register('Handling Compilation', 'builder.compile', compile);
+        CommandManager.register('Handling Running Compiled', 'builder.runCompiled', runCompiled);
 
-        KeyBindingManager.addBinding('builder.build', 'Ctrl-Alt-B');
+        KeyBindingManager.addBinding('builder.run', 'F9');
+        KeyBindingManager.addBinding('builder.compile', 'F10');
+        KeyBindingManager.addBinding('builder.runCompiled', 'F11');
 
         // Add menu item to edit .json file
         var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
@@ -111,4 +152,4 @@ define(function (require, exports, module) {
         ExtensionUtils.loadStyleSheet(module, "brackets-builder.css");
     });
 
-});
+}); 

@@ -4,3 +4,10 @@
     padding: 5px 10px;
     white-space: pre;
 }
+
+.command {
+    font-weight: bold;
+    padding: 5px 10px 2px 10px;
+    margin-bottom: 2px;
+    border-bottom: 1px groove hsla(0, 0%, 0%, 0.4);
+}

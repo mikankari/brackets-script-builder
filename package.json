@@ -1,9 +1,9 @@
 {
     "name": "brackets-script-builder",
     "title": "Brackets Script Builder",
-    "description": "F9 to run current script. F10 to compile file. F11 to run compilation result.",
+    "description": "Allows to run programs contained in one file (can be used for Scala, Java, Python, Ruby, Node, C++, Bash) from Brackets and display results in panel.<br/>It is possible to create own build systems via 'Edit > Script Builder Configuration' menu item and editing opened JSON file (you need to restart Brackets afterwards).<br/>Based on Brackets Builder (http://github.com/Vhornets/brackets-builder).<br/><br/>Keyboard shortcuts:<br/> * F9 to run current file as a script.<br/> * F10 to compile current file.<br/> * F11 to run compilation result.  ",
     "homepage": "https://github.com/ghaxx/brackets-script-builder",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "author": "Ghaxx <kanngaxx@gmail.com>",
     "files": [
         "main.js",

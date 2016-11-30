@@ -110,18 +110,19 @@ define(function (require, exports, module) {
                 $('#builder-panel .command .text').html(cmd);
                 $('#builder-panel .command .status').html("Running...");
                 panel.show();
-                nodeConnection.domains["builder.execute"].exec(curOpenDir, cmd)
-                .fail(function (err) {
-                    $('#builder-panel .builder-content').html(processCmdOutput(err));
-                })
+                $('#builder-panel .builder-content').empty();
+                nodeConnection.domains["builder-execute"].exec(curOpenDir, cmd)
                 .then(function (data) {
                     function buildRuntimeStatus(start) {
                         var duration = (new Date().getTime() - start.getTime()) / 1000;
                         return 'Finished in <b>' + duration + '</b>s';
                     }
-                    $('#builder-panel .builder-content').html(processCmdOutput(data));
                     $('#builder-panel .command .status').html(buildRuntimeStatus(start));
-                });
+                })
+                .always(function (){
+                    nodeConnection.disconnect();
+                })
+                .done();
             }
         }).done();
     }
@@ -174,6 +175,25 @@ define(function (require, exports, module) {
 
         // Load panel css
         ExtensionUtils.loadStyleSheet(module, "brackets-builder.css");
+
+        nodeConnection.on("builder-execute:input", function (event, data){
+            var input = $("<input type=\"text\">").on("keypress", function (event){
+                if(event.keyCode === 13){
+                    nodeConnection.domains["builder-execute"].write($(event.target).val())
+                    .fail(function (error){
+                        console.log("[script builder] stdin writing failed");
+                    });
+                }
+            });
+            $('#builder-panel .builder-content').append($("<div></div>").append(input));
+            input.focus();
+        });
+        nodeConnection.on("builder-execute:data", function (event, data){
+            $('#builder-panel .builder-content').append("<div>" + processCmdOutput(data) + "</div>");
+        });
+        nodeConnection.on("builder-execute:error", function (event, data){
+            $('#builder-panel .builder-content').append("<div>" + processCmdOutput(data) + "</div>");
+        });
     });
 
 }); 

@@ -29,6 +29,11 @@
         });
     }
 
+    function kill(callback) {
+        running.kill();
+        callback(null);
+    }
+
     exports.init = function (DomainManager) {
         if (!DomainManager.hasDomain(domainName)) {
             DomainManager.registerDomain(domainName, {
@@ -60,6 +65,10 @@
                 name: "data",
                 type: "string"
             }],
+            []
+        );
+        DomainManager.registerCommand(domainName, "kill", kill, true, "Send SIGTERM",
+            [],
             []
         );
 

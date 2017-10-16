@@ -179,10 +179,10 @@ define(function (require, exports, module) {
         nodeConnection.on("builder-execute:input", function (event, data){
             var input = $("<input type=\"text\">").on("keypress", function (event){
                 if(event.keyCode === 13){
-                    nodeConnection.domains["builder-execute"].write($(event.target).val())
-                    .fail(function (error){
-                        console.log("[script builder] stdin writing failed");
-                    });
+                    nodeConnection.domains["builder-execute"].write($(event.target).val());
+                }
+                if(event.keyCode === 3){
+                    nodeConnection.domains["builder-execute"].kill();
                 }
             });
             $('#builder-panel .builder-content').append($("<div></div>").append(input));
@@ -196,4 +196,4 @@ define(function (require, exports, module) {
         });
     });
 
-}); 
+});

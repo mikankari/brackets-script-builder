@@ -164,9 +164,6 @@ define(function (require, exports, module) {
         menu.addMenuItem("builder.compile", "F10", Menus.BEFORE, "bsb.debug");
         menu.addMenuItem("builder.runCompiled", "F11", Menus.BEFORE, "bsb.debug");
 
-        // Add menu item to edit .json file
-        var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-
         menu.addMenuDivider();
         // Create menu item that opens the config .json-file
         CommandManager.register("Script Builder Configuration", 'builder.open-conf', function () {

@@ -112,18 +112,18 @@ define(function (require, exports, module) {
                 panel.show();
                 $('#builder-panel .builder-content').empty();
                 $("#builder-panel .builder-content").append("<div class=\"input\"></div>").children().append("<input type=\"text\">").children().on("keypress", function (event){
-                    var input = $(event.target);
                     if(event.keyCode === 13){
+                        var input = $(event.target);
                         nodeConnection.domains["builder-execute"].write(input.val());
+                        $('#builder-panel .builder-content .input').before("<div class=\"inputed\">" + processCmdOutput(input.val()) + "</div>");
+                        input.val("");
                     }
                     if(event.keyCode === 3){
                         nodeConnection.domains["builder-execute"].kill();
                     }
-                    $('#builder-panel .builder-content .input').before("<div class=\"inputed\">" + processCmdOutput(input.val()) + "</div>");
-                    input.val("");
                 }).focus();
                 nodeConnection.domains["builder-execute"].exec(curOpenDir, cmd)
-                .then(function (data) {
+                .always(function (data) {
                     function buildRuntimeStatus(start) {
                         var duration = (new Date().getTime() - start.getTime()) / 1000;
                         return 'Finished in <b>' + duration + '</b>s';

@@ -7,6 +7,7 @@
     },
     {
         "name": "Java",
+        "run": "rm $BASE_FILE.class; javac $FILE; java $BASE_FILE",
         "compile": "javac $FILE",
         "runCompiled": "java $BASE_FILE"
     },
@@ -15,8 +16,16 @@
         "run": "python $FILE"
     },
     {
+        "name": "PHP",
+        "run": "php $FILE"
+    },
+    {
         "name": "JavaScript",
-        "run": "node $FILE"
+        "run": "/usr/local/bin/node $FULL_FILE"
+    },
+    {
+        "name": "CoffeeScript",
+        "run": "/usr/local/bin/node $BASE_FILE.js"
     },
     {
         "name": "Ruby",
@@ -25,5 +34,21 @@
     {
         "name": "Golang",
         "run": "go build"
+    },
+    {
+        "name": "C",
+        "run": "rm ./$BASE_FILE; gcc $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c_main.sh) -o $BASE_FILE $FILE; ./$BASE_FILE",
+        "compile": "gcc $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c_main.sh) -o $BASE_FILE $FILE",
+        "runCompiled": "./$BASE_FILE"
+    },
+    {
+        "name": "C++",
+        "run": "rm ./main; g++ $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c++_main.sh) -o main main.cpp; ./main | tee ./main.log",
+        "compile": "g++ $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c++_main.sh) -o main main.cpp",
+        "runCompiled": "./main | tee ./main.log"
+    },
+    {
+        "name": "bash",
+        "run": "sh $FILE"
     }
 ]

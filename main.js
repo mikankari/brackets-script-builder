@@ -123,7 +123,7 @@ define(function (require, exports, module) {
                     input.val("");
                 }).focus();
                 nodeConnection.domains["builder-execute"].exec(curOpenDir, cmd)
-                .then(function (data) {
+                .always(function (data) {
                     function buildRuntimeStatus(start) {
                         var duration = (new Date().getTime() - start.getTime()) / 1000;
                         return 'Finished in <b>' + duration + '</b>s';

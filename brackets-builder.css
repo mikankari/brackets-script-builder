@@ -7,11 +7,14 @@
 }
 
 .builder-content input {
-    background-color: transparent !important;
-    color: rgb(55, 177, 172) !important;
     margin: 0;
     padding: 0;
     border: 0 !important;
+    width: 100%;
+}
+
+.builder-content .inputed{
+    color: rgb(55, 177, 172);
 }
 
 .command {

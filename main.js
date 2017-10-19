@@ -111,6 +111,17 @@ define(function (require, exports, module) {
                 $('#builder-panel .command .status').html("Running...");
                 panel.show();
                 $('#builder-panel .builder-content').empty();
+                $("#builder-panel .builder-content").append("<div class=\"input\"></div>").children().append("<input type=\"text\">").children().on("keypress", function (event){
+                    var input = $(event.target);
+                    if(event.keyCode === 13){
+                        nodeConnection.domains["builder-execute"].write(input.val());
+                    }
+                    if(event.keyCode === 3){
+                        nodeConnection.domains["builder-execute"].kill();
+                    }
+                    $('#builder-panel .builder-content .input').before("<div class=\"inputed\">" + processCmdOutput(input.val()) + "</div>");
+                    input.val("");
+                }).focus();
                 nodeConnection.domains["builder-execute"].exec(curOpenDir, cmd)
                 .then(function (data) {
                     function buildRuntimeStatus(start) {
@@ -118,11 +129,9 @@ define(function (require, exports, module) {
                         return 'Finished in <b>' + duration + '</b>s';
                     }
                     $('#builder-panel .command .status').html(buildRuntimeStatus(start));
-                })
-                .always(function (){
+                    $('#builder-panel .builder-content .input').remove();
                     nodeConnection.disconnect();
-                })
-                .done();
+                });
             }
         }).done();
     }
@@ -176,23 +185,11 @@ define(function (require, exports, module) {
         // Load panel css
         ExtensionUtils.loadStyleSheet(module, "brackets-builder.css");
 
-        nodeConnection.on("builder-execute:input", function (event, data){
-            var input = $("<input type=\"text\">").on("keypress", function (event){
-                if(event.keyCode === 13){
-                    nodeConnection.domains["builder-execute"].write($(event.target).val());
-                }
-                if(event.keyCode === 3){
-                    nodeConnection.domains["builder-execute"].kill();
-                }
-            });
-            $('#builder-panel .builder-content').append($("<div></div>").append(input));
-            input.focus();
-        });
         nodeConnection.on("builder-execute:data", function (event, data){
-            $('#builder-panel .builder-content').append("<div>" + processCmdOutput(data) + "</div>");
+            $('#builder-panel .builder-content .input').before("<div>" + processCmdOutput(data) + "</div>");
         });
         nodeConnection.on("builder-execute:error", function (event, data){
-            $('#builder-panel .builder-content').append("<div>" + processCmdOutput(data) + "</div>");
+            $('#builder-panel .builder-content .input').before("<div>" + processCmdOutput(data) + "</div>");
         });
     });
 

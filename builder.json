@@ -37,9 +37,9 @@
     },
     {
         "name": "C",
-        "run": "rm ./$BASE_FILE; gcc $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c_main.sh) -o $BASE_FILE $FILE; ./$BASE_FILE",
-        "compile": "gcc $(sh /Applications/Brackets.app/Contents/www/extensions/dev/brackets-script-builder/c_main.sh) -o $BASE_FILE $FILE",
-        "runCompiled": "./$BASE_FILE"
+        "run": "rm ./$BASE_FILE; gcc -o $BASE_FILE $FILE; ./$BASE_FILE | tee ./$BASE_FILE.log",
+        "compile": "gcc -o $BASE_FILE $FILE",
+        "runCompiled": "./$BASE_FILE | tee ./$BASE_FILE.log"
     },
     {
         "name": "C++",

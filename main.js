@@ -40,13 +40,14 @@ define(function (require, exports, module) {
     function processCmdOutput(data) {
         data = JSON.stringify(data);
         data = data
-          .replace(/\"/g, '')
-          .replace(/\\r/g, '\r')
-          .replace(/\\t/g, '\t')
-          .replace(/\\n/g, '\n')
-          .replace(/\\n/g, '\n')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+          .replace(/ /g, "\u00A0")
+          .replace(/\\"/g, "\"")
+          .replace(/\\r/g, "\r")
+          .replace(/\\t/g, "\t")
+          .replace(/\\n/g, "\n")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/^"|"$/g, "");
         return data;
     }
     

@@ -191,7 +191,7 @@ define(function (require, exports, module) {
             $('#builder-panel .builder-content .input').before("<div>" + processCmdOutput(data) + "</div>");
         });
         nodeConnection.on("builder-execute:error", function (event, data){
-            $('#builder-panel .builder-content .input').before("<div>" + processCmdOutput(data) + "</div>");
+            $('#builder-panel .builder-content .input').before("<div class=\"error\">" + processCmdOutput(data) + "</div>");
         });
     });
 

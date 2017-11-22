@@ -14,7 +14,11 @@
 }
 
 .builder-content .inputed{
-    color: rgb(55, 177, 172);
+    color: #37b1ac;
+}
+
+.builder-content .error{
+    color: #cc3d3d;
 }
 
 .command {

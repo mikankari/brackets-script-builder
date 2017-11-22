@@ -44,7 +44,9 @@ define(function (require, exports, module) {
           .replace(/\\r/g, '\r')
           .replace(/\\t/g, '\t')
           .replace(/\\n/g, '\n')
-          .replace(/\\n/g, '\n');
+          .replace(/\\n/g, '\n')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
         return data;
     }
     

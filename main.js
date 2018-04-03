@@ -14,7 +14,7 @@ define(function (require, exports, module) {
         DocumentManager     = brackets.getModule("document/DocumentManager"),
         KeyBindingManager   = brackets.getModule('command/KeyBindingManager'),
         FileUtils           = brackets.getModule("file/FileUtils"),
-        PanelManager        = brackets.getModule("view/PanelManager"),
+        WorkspaceManager        = brackets.getModule("view/WorkspaceManager"),
         Dialogs             = brackets.getModule("widgets/Dialogs"),
         nodeConnection      = new NodeConnection(),
         domainPath          = ExtensionUtils.getModulePath(module) + "domain";
@@ -152,7 +152,7 @@ define(function (require, exports, module) {
     }
 
     AppInit.appReady(function () {
-        panel = PanelManager.createBottomPanel("brackets-builder-panel", $(panelHTML), 100);
+        panel = WorkspaceManager.createBottomPanel("brackets-builder-panel", $(panelHTML), 100);
         $('#builder-panel .close').on('click', function () {
             panel.hide();
         });
